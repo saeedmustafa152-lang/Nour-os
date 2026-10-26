@@ -11,7 +11,7 @@ jobs:
   build:
     name: Build Debian Live Prototype
     runs-on: ubuntu-24.04
-    timeout-minutes: 350
+    timeout-minutes: 240
 
     steps:
       - name: Install build dependencies
@@ -27,7 +27,9 @@ jobs:
             grub-pc-bin \
             grub-efi-amd64-bin \
             mtools \
-            dosfstools
+            dosfstools \
+            coreutils \
+            ca-certificates
 
       - name: Configure Debian Live
         run: |
@@ -48,7 +50,11 @@ jobs:
           sudo mkdir -p config/package-lists
 
           sudo tee config/package-lists/nour.list.chroot > /dev/null <<'EOF'
-          task-xfce-desktop
+          coreutils
+          bash
+          xfce4
+          xfce4-goodies
+          lightdm
           firefox-esr
           network-manager
           sudo
@@ -63,12 +69,15 @@ jobs:
           cd "$GITHUB_WORKSPACE/nour-build"
           sudo lb build
 
-      - name: Check ISO output
+      - name: Verify ISO
         run: |
-          find "$GITHUB_WORKSPACE/nour-build" \
-            -maxdepth 1 -type f -name '*.iso' -ls
-          test -n "$(find "$GITHUB_WORKSPACE/nour-build" \
+          ISO="$(find "$GITHUB_WORKSPACE/nour-build" \
             -maxdepth 1 -type f -name '*.iso' -print -quit)"
+          if [ -z "$ISO" ]; then
+            echo "ERROR: ISO file was not created"
+            exit 1
+          fi
+          ls -lh "$ISO"
 
       - name: Upload NOUR OS ISO
         uses: actions/upload-artifact@v4

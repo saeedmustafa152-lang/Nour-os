@@ -10,46 +10,30 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
-
     steps:
       - name: Install build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            live-build debootstrap squashfs-tools xorriso \
-            isolinux syslinux-common grub-pc-bin \
-            grub-efi-amd64-bin mtools dosfstools
+          sudo apt-get install -y live-build
 
-      - name: Configure Debian Live
+      - name: Configure NOUR OS
         run: |
           mkdir nour-build
           cd nour-build
           sudo lb config \
             --distribution trixie \
-            --archive-areas "main contrib non-free-firmware" \
             --binary-images iso-hybrid \
-            --bootappend-live "boot=live components quiet splash"
+            --archive-areas "main contrib non-free-firmware"
 
-      - name: Select desktop and applications
+      - name: Add desktop packages
         working-directory: nour-build
         run: |
           sudo mkdir -p config/package-lists
-          sudo tee config/package-lists/nour.list.chroot > /dev/null <<'EOF'
-          live-boot
-          live-config
-          task-xfce-desktop
-          firefox-esr
-          network-manager
-          sudo
-          curl
-          git
-          EOF
+          printf '%s\n' task-xfce-desktop firefox-esr network-manager | sudo tee config/package-lists/nour.list.chroot
 
-      - name: Build NOUR OS ISO
+      - name: Build Linux ISO
         working-directory: nour-build
-        run: |
-          sudo lb build
+        run: sudo lb build
 
       - name: Upload ISO
         uses: actions/upload-artifact@v4

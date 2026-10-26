@@ -1,0 +1,24 @@
+
+name: NOUR OS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare NOUR OS prototype
+        run: |
+          mkdir -p nour
+          echo "NOUR OS Prototype" > nour/README.txt
+          echo "Linux-based operating system" >> nour/README.txt
+
+      - name: Upload prototype
+        uses: actions/upload-artifact@v4
+        with:
+          name: nour-os-prototype
+          path: nour/
